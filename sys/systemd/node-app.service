@@ -1,0 +1,9 @@
+[Unit]
+Description=My node app instance
+
+[Service]
+User=www-data
+WorkingDirectory=/var/www/html/app/node-app
+Environment=PORT=3000
+ExecStart=/usr/bin/node index.js
+Restart=always
