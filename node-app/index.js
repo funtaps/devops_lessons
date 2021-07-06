@@ -1,6 +1,10 @@
 const http = require('http');
 
-const hostname = '127.0.0.1';
+process.on('uncaughtException', (exception) => {
+  console.log('Exception:\n', exception);
+});
+
+const hostname = '0.0.0.0';
 const port = process.env.PORT;
 
 const server = http.createServer((req, res) => {
@@ -10,7 +14,7 @@ const server = http.createServer((req, res) => {
     return;
   }
   res.statusCode = 404;
-  res.end('404. No such page on node');
+  res.end(`404. No page "${req.url}" on node`);
 });
 
 server.listen(port, hostname, () => {
