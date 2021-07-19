@@ -1,8 +1,168 @@
+<!DOCTYPE html>
 <html>
   <head>
-    <title>Hello</title>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+
+    <title>DevOps</title>
+
+    <link rel="stylesheet" href="reveal/dist/reset.css" />
+    <link rel="stylesheet" href="reveal/dist/reveal.css" />
+    <link rel="stylesheet" href="reveal/dist/theme/black.css" />
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="reveal/plugin/highlight/monokai.css" />
   </head>
   <body>
-    Hello)
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h2>Process-manager</h2>
+          <ul style="list-style-type: none">
+            <li>Запуск</li>
+            <li>Слежение/Переподнаятие</li>
+            <li>Перезапуск</li>
+            <li>Перечитать конфиги</li>
+            <li>Перенаправление логов</li>
+            <li>Автозапуск</li>
+            <li>Менеджмент зависимостей</li>
+          </ul>
+        </section>
+        <section>
+          <ul style="list-style-type: none">
+            <li>Supervisord</li>
+            <li>Systemd</li>
+            <li>docker/k8s</li>
+          </ul>
+        </section>
+        <section>
+          <h2>Supervisord</h2>
+          <aside class="notes">На питоне, до systemd</aside>
+          <pre><code data-trim data-noescape>
+            [program:set_pfiles_md5]
+            directory=/var/www/vhosts/repetitors.info/httpdocs/common/fraud
+            command=/usr/bin/php set_pfiles_md5.php
+            user=apache
+            autorestart=true
+            stdout_logfile=syslog
+            stderr_logfile=syslog
+            stopsignal=HUP
+          </code></pre>
+        </section>
+        <section>
+          <h2>Docker/k8s</h2>
+          <div>Будем подробнее смотреть позже</div>
+        </section>
+        <section>
+          <h2>Systemd</h2>
+          <aside class="notes">
+            Дефолтный менеджер процессов в линуксе. Вообще ещё кучу всего умеет,
+            но менеджмент процессов достаточно простой, чтобы мы на него глянули
+          </aside>
+          <pre><code data-trim data-noescape>
+            [Unit]
+            Description=Profi dashboard
+
+            [Service]
+            User=profidashboard
+            WorkingDirectory=/opt/profi-dashboard
+            ExecStart=/usr/bin/node index.js
+          </code></pre>
+        </section>
+        <section>
+          <pre><code data-trim data-noescape data-line-numbers="7-8|10-11|12-13|14-16">
+            [Unit]
+            Description=Warp web app instance
+
+            [Service]
+            User=warp
+            WorkingDirectory=/opt/warp
+            Environment=NODE_ENV=production
+            Environment=PORT=%i
+            ExecStart=/usr/bin/node build/app.js
+            Restart=always # always | on-success | on-failure | on-abnormal
+            RestartSec=1
+            StartLimitInterval=5
+            StartLimitBurst=6
+            Type=notify # simple | exec | forking | oneshot | dbus | notify | idle
+            NotifyAccess=all
+            TimeoutStartSec=15
+          </code></pre>
+          <aside class="notes">
+            <b>RestartSec</b> - время между рестартами <br />
+            <b>StartLimitInterval/StartLimitBurst</b> - если сервим рестартанул
+            6 раз за 5 секунд, то короче не парься <br />
+            <b>Simple</b> - начинает запуск и сразу идёт дальше. Быстро,
+            дефолтно, но, например, запуск будет считаться как бы успешным, даже
+            если собственно программы нет. Он конечно потом будет считаться
+            упавшим тоже. <br />
+            <b>Exec</b> - как simple, но будет ждать реального запуска основного
+            процесса. Системное какое-то программирование, fork, execve. <br />
+            <b>Forking</b> - традиционно в юниксе, кажется, процесс, который
+            стартовал, делал весь сет-ап, потом делал форк, и exit. При выборе
+            данного варианта systemd будет считать сервис стартовавшим, когда
+            изначальный процесс завершил работу. <br />
+            <b>Oneshot</b> - как simple, но даже когда основной процесс завершил
+            работу, сервис считается работающим. Для не-демонов как бы. <br />
+            <b>Notify</b> - сервис сам нотифицуреует systemd, когда он нормально
+            стартовал. <br />
+            <b>Dbus</b> - тоже самое, но нотификации идут по D-bus. <br />
+            <b>Idle</b> - вообще не понятная фигня, не нужна короче. <br />
+            <b>NotifyAccess</b> - какие процессы могут отправлять нотификации
+            <br />
+            <b>TimeoutStartSec</b> - сколько ждать нотификаций<br />
+          </aside>
+        </section>
+        <section>
+          <h2>Практика</h2>
+          https://github.com/funtaps/devops_lessons
+          <p>Поднять сервис</p>
+          <pre><code data-trim data-noescape>
+            const http = require('http');
+
+            const hostname = '0.0.0.0';
+            const port = process.env.PORT;
+
+            const server = http.createServer((req, res) => {
+              if (req.url === "/node/hello") {
+                res.statusCode = 200;
+                res.end('Hello from node.js');
+                return;
+              }
+              res.statusCode = 404;
+              res.end(`404. No page "${req.url}" on node`);
+            });
+
+            server.listen(port, hostname, () => {
+              console.log(`Server running at http://${hostname}:${port}/`);
+            });
+
+            process.on('uncaughtException', (exception) => {
+              console.log('Exception:\n', exception);
+            });
+          </code></pre>
+        </section>
+      </div>
+    </div>
+
+    <script src="reveal/dist/reveal.js"></script>
+    <script src="reveal/plugin/notes/notes.js"></script>
+    <script src="reveal/plugin/markdown/markdown.js"></script>
+    <script src="reveal/plugin/highlight/highlight.js"></script>
+    <script>
+      // More info about initialization & config:
+      // - https://revealjs.com/initialization/
+      // - https://revealjs.com/config/
+      Reveal.initialize({
+        hash: true,
+        width: 1200,
+
+        // Learn about plugins: https://revealjs.com/plugins/
+        plugins: [RevealMarkdown, RevealHighlight, RevealNotes],
+      });
+    </script>
   </body>
 </html>

@@ -1,9 +1,5 @@
 const http = require('http');
 
-process.on('uncaughtException', (exception) => {
-  console.log('Exception:\n', exception);
-});
-
 const hostname = '0.0.0.0';
 const port = process.env.PORT;
 
@@ -19,4 +15,8 @@ const server = http.createServer((req, res) => {
 
 server.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`);
+});
+
+process.on('uncaughtException', (exception) => {
+  console.log('Exception:\n', exception);
 });
