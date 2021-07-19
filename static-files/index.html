@@ -41,7 +41,7 @@
         <section>
           <h2>Supervisord</h2>
           <aside class="notes">На питоне, до systemd</aside>
-          <pre><code data-trim data-noescape>
+          <pre><code data-trim data-noescape class="language-ini">
             [program:set_pfiles_md5]
             directory=/var/www/vhosts/repetitors.info/httpdocs/common/fraud
             command=/usr/bin/php set_pfiles_md5.php
@@ -62,7 +62,7 @@
             Дефолтный менеджер процессов в линуксе. Вообще ещё кучу всего умеет,
             но менеджмент процессов достаточно простой, чтобы мы на него глянули
           </aside>
-          <pre><code data-trim data-noescape>
+          <pre><code data-trim data-noescape class="language-ini">
             [Unit]
             Description=Profi dashboard
 
@@ -73,7 +73,7 @@
           </code></pre>
         </section>
         <section>
-          <pre><code data-trim data-noescape data-line-numbers="7-8|10-11|12-13|14-16">
+          <pre><code data-trim data-noescape class="language-ini" data-line-numbers="7-8|10-11|12-13|14-16">
             [Unit]
             Description=Warp web app instance
 
@@ -117,10 +117,30 @@
           </aside>
         </section>
         <section>
+          <h2>Systemctl</h2>
+          <pre><code data-trim data-noescape class="language-bash">
+            sudo systemctl command service
+            sudo systemctl start nginx
+          </code></pre>
+          <ul style="list-style-type: none">
+            <li>status - что как + чуток логов</li>
+            <li>start</li>
+            <li>stop</li>
+            <li>restart - stop + start</li>
+            <li>reload - отправить сигнал "перечитай конфиги"</li>
+          </ul>
+          <pre><code data-trim data-noescape class="language-bash">
+            sudo systemctl daemon-reload
+          </code></pre>
+          <pre><code data-trim data-noescape class="language-bash">
+            sudo journalctl -f -u service
+          </code></pre>
+        </section>
+        <section>
           <h2>Практика</h2>
           https://github.com/funtaps/devops_lessons
           <p>Поднять сервис</p>
-          <pre><code data-trim data-noescape>
+          <pre><code data-trim data-noescape class="language-js">
             const http = require('http');
 
             const hostname = '0.0.0.0';
@@ -143,6 +163,16 @@
             process.on('uncaughtException', (exception) => {
               console.log('Exception:\n', exception);
             });
+          </code></pre>
+        </section>
+        <section>
+          Где взять ноду?
+          <pre><code data-trim data-noescape class="language-bash">
+            sudo apt install nodejs
+          </code></pre>
+          Куда добавлять конфиг для systemd?
+          <pre><code data-trim data-noescape class="language-plaintext">
+            /etc/systemd/system
           </code></pre>
         </section>
       </div>
