@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+
+    <title>Nginx</title>
+
+    <link rel="stylesheet" href="reveal/dist/reset.css" />
+    <link rel="stylesheet" href="reveal/dist/reveal.css" />
+    <link rel="stylesheet" href="reveal/dist/theme/black.css" />
+    <style>
+      .reveal pre code {
+        max-height: 600px;
+      }
+    </style>
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="reveal/plugin/highlight/monokai.css" />
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h2>Nginx</h2>
+        </section>
+        <section>
+          <pre><code data-trim data-noescape class="language-nginx">
+            events {}
+
+            http {
+              server {
+                root /usr/share/nginx/html;
+              }
+            }
+          </code></pre>
+        </section>
+        <section>
+          <pre><code data-trim data-noescape class="language-nginx">
+            events {}
+
+            http {
+              server {
+                listen 80 default_server;
+                root /usr/share/nginx/html;
+                location / {
+                  try_files $uri $uri/index.html =404;
+                }
+              }
+            }
+          </code></pre>
+        </section>
+        <section>
+          <h4 style="text-transform: none">listen</h4>
+          <pre><code data-trim data-noescape class="language-nginx" data-line-numbers="5-6,12-13">
+            events {}
+
+            http {
+              server {
+                listen 80;
+                root /usr/share/nginx/html0;
+                location / {
+                  try_files $uri $uri/index.html =404;
+                }
+              }
+              server {
+                listen 81;
+                root /usr/share/nginx/html1;
+                location / {
+                  try_files $uri $uri/index.html =404;
+                }
+              }
+            }
+          </code></pre>
+        </section>
+        <section>
+          <h4 style="text-transform: none">server_name name ...;</h4>
+          <pre><code data-trim data-noescape  class="language-nginx" data-line-numbers="5,7,13,14,15">
+            events {}
+
+            http {
+              server {
+                server_name vasya.loc www.vasya.loc ~^(?&lt;subdmn&gt;[a-z]+)\.vasya\.loc$;
+                listen 80;
+                root /usr/share/nginx/html_vasya;
+                location / {
+                  try_files /$subdmn/$uri $uri $uri/index.html =404;
+                }
+              }
+              server {
+                server_name petya.loc www.petya.loc;
+                listen 80 default_server;
+                root /usr/share/nginx/html_petya;
+                location / {
+                  try_files $uri $uri/index.html =404;
+                }
+              }
+            }
+          </code></pre>
+        </section>
+        <section>
+          <h4 style="text-transform: none">
+            location [ = | ~ | ~* | ^~ ] uri { ... }
+          </h4>
+          <table width="100%">
+            <tr>
+              <td>
+                <div>
+                  <pre><code data-trim data-noescape  class="language-nginx">
+              location = / {
+                  [ configuration A ]
+              }
+
+              location / {
+                  [ configuration B ]
+              }
+
+              location /documents/ {
+                  [ configuration C ]
+              }
+
+              location ^~ /images/ {
+                  [ configuration D ]
+              }
+
+              location ~* \.(gif|jpg|jpeg)$ {
+                  [ configuration E ]
+              }
+          </code></pre>
+                </div>
+              </td>
+              <td>
+                <div>
+                  <ul
+                    style="
+                      list-style-type: none;
+                      font-size: 24px;
+                      display: block;
+                    "
+                  >
+                    <li>“/” - A</li>
+                    <li>“/index.html” - B</li>
+                    <li>“/documents/document.html” - C</li>
+                    <li>“/images/1.gif” - D</li>
+                    <li>“/documents/1.jpg” - E</li>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </section>
+        <section>
+          <h4 style="text-transform: none">try_files file ... uri|=code;</h4>
+          <h4 style="text-transform: none">
+            error_page code ... [=[response]] uri;
+          </h4>
+          <pre><code style="max-height: 500px;" data-trim data-noescape  class="language-nginx" data-line-numbers="2-8|10-15|17-25">
+            root /usr/share/nginx/html_vasya;
+            location /images/ {
+                try_files $uri /images/default.gif;
+            }
+
+            location = /images/default.gif {
+                try_files /my_default.gif =404;
+            }
+
+            location / {
+              try_files $uri $uri/index.html $uri.html =404;
+            }
+
+            error_page 404             /404.html;
+            error_page 500 502 503 504 /50x.html;
+
+            location / {
+              try_files /system/maintenance.html
+              $uri $uri/index.html $uri.html
+              @warp;
+            }
+
+            location @mongrel {
+              proxy_pass http://warp-1-2.x340.org:8200;
+            }
+          </code></pre>
+        </section>
+        <section>
+          <h4 style="text-transform: none">proxy_pass URL;</h4>
+          <h4 style="text-transform: none">upstream name { ... }</h4>
+          <pre><code style="max-height: 500px;" data-trim data-noescape  class="language-nginx" data-line-numbers="1-7|9-12|14-17|19-23">
+            upstream warp {
+                server warp-4-2.x340.org      weight=5;
+                server 127.0.0.1:8200         max_conns=200;
+                server unix:/tmp/backend3;
+
+                server warp-3-1.x340.org      backup;
+            }
+
+            location /graphql/ {
+              proxy_pass http://warp;
+              # vasya.loc/graphql/index.js -> warp-4-2.x340.org/graphql/index.js
+            }
+
+            location /public/ {
+              proxy_pass http://warp/static/;
+              # vasya.loc/public/index.js -> warp-4-2.x340.org/static/index.js
+            }
+
+            location /vasya/ {
+              proxy_set_header X-Subdmn $subdmn;
+              proxy_pass http://petya.loc:3000/;
+              # asd.vasya.loc/vasya/index.js -> petya.loc:3000/index.js (+header)
+            }
+          </code></pre>
+        </section>
+        <section>
+          <h4 style="text-transform: none">user user [group];</h4>
+          <pre><code data-trim data-noescape  class="language-nginx">
+            user www-data;
+          </code></pre>
+        </section>
+        <section>
+          <h4 style="text-transform: none">error_log path [level];</h4>
+          <h4 style="text-transform: none">access_log path [format ...];</h4>
+          <pre><code data-trim data-noescape  class="language-nginx">
+            error_log /var/log/nginx/error.log warn;
+            access_log /var/log/nginx/access.log my_format1;
+          </code></pre>
+        </section>
+        <section>
+          <h4 style="text-transform: none">
+            log_format name [escape=default|json|none] string ...;
+          </h4>
+          <pre><code data-trim data-noescape  class="language-nginx">
+            log_format  egjson escape=json '{'
+              '"dt":"$time_iso8601", '
+              '"msec":"$msec", '
+              '"status":"$status", '
+              '"host":"$host", '
+              '"srv_port":"$server_port", '
+              '"r_addr":"$remote_addr", '
+              '"r_user":"$remote_user", '
+              '"req_time":"$request_time", '
+              '"body_bytes":"$body_bytes_sent", '
+              '"request":"$request", '
+              '"uid_got":"$uid_got", '
+              '"uid_set":"$uid_set", '
+              '"cont_type":"$sent_http_content_type", '
+              '"http_ref":"$http_referer", '
+              '"http_ua":"$http_user_agent", '
+              '"http_xfrw":"$http_x_forwarded_for", '
+              '"http_lang":"$http_accept_language", '
+              '"http_request_id":"$http_request_id", '
+              '"up_addr":"$upstream_addr", '
+              '"up_resp_time":"$upstream_response_time", '
+              '"cookies":{'
+                '"serverid":"$cookie_serverid", '
+                '"uid":"$cookie_uid", '
+                '"egadmin":"$cookie_egadmin", '
+                '"egback":"$cookie_egback", '
+                '"_ga":"$cookie__ga", '
+                '"_ym_uid":"$cookie__ym_uid", '
+                '"ab_ids":"$cookie_ab_ids" '
+              '}'
+            '}';
+
+            # {"dt":"2021-07-29T20:01:58+00:00", "msec":"1627588918.145", "status":"200", "host":"10.4.89.58", "srv_port":"80", "r_addr":"192.168.192.226", "r_user":"", "req_time":"0.000", "body_bytes":"607", "request":"GET /favicon.ico HTTP/1.1", "uid_got":"", "uid_set":"", "cont_type":"text/html", "http_ref":"http://10.4.89.58/aaa/", "http_ua":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.164 Safari/537.36", "http_xfrw":"", "http_lang":"en-US,en;q=0.9,ru;q=0.8", "http_request_id":"", "up_addr":"", "up_resp_time":"", "cookies":{"serverid":"", "uid":"", "egadmin":"", "egback":"", "_ga":"", "_ym_uid":"", "ab_ids":"" }}
+
+            log_format  eg_px_frontend    '$status "$host" "$time_local" "$remote_addr" "$remote_user" "$request_time" $body_bytes_sent '
+                      '"$request" "$http_referer" "$http_user_agent" "$http_x_forwarded_for" "$server_port" "$cookie_ri_uck" '
+                      '"$uid_got" "$uid_set" "$cookie_ri_oid" "$cookie_ri_sck" "$sent_http_content_type" "$http_accept_language" '
+                      '"$cookie_uid" "$cookie_egadmin" "$cookie_egback" "$upstream_response_time" "$upstream_addr" "$cookie_serverid" "$http_request_id" "$gity"';
+
+            # 200 "10.4.89.58" "29/Jul/2021:20:03:20 +0000" "192.168.192.226" "-" "0.000" 607 "GET /favicon.ico HTTP/1.1" "http://10.4.89.58/aaa/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.164 Safari/537.36" "-" "80" "-" "-" "-" "-" "-" "text/html" "en-US,en;q=0.9,ru;q=0.8" "-" "-" "-" "-" "-" "-" "-" "msk"
+          </code></pre>
+        </section>
+        <section>
+          <h4 style="text-transform: none">include file | mask;</h4>
+          <table width="100%">
+            <tr>
+              <td>
+                <pre
+                  style="margin: 0; width: 100%"
+                ><code data-trim data-noescape  class="language-nginx">
+            user www-data;
+            worker_processes auto;
+            pid /run/nginx.pid;
+            include /etc/nginx/modules-enabled/*.conf;
+             
+            events {
+                    worker_connections 768;
+            }
+             
+            http {
+                    server_tokens off;
+             
+                    include /etc/nginx/mime.types;
+             
+                    access_log /var/log/nginx/access.log;
+                    error_log /var/log/nginx/error.log;
+             
+                    include /etc/nginx/conf.d/*.conf;
+                    include /etc/nginx/sites-enabled/*;
+            }
+            
+          </code></pre>
+              </td>
+              <td>
+                <pre
+                  style="margin: 0; width: 100%"
+                ><code data-trim data-noescape  class="language-nginx">
+                  /etc/nginx/
+                  ├── conf.d
+                  ├── fastcgi.conf
+                  ├── fastcgi_params
+                  ├── mime.types
+                  ├── modules-available
+                  ├── modules-enabled
+                  │   └── 50-mod-mail.conf 
+                  |       -> /usr/.../mod-mail.conf
+                  ├── nginx.conf
+                  ├── sites-available
+                  │   └── default
+                  ├── sites-enabled
+                  │   └── default
+                  |       -> ../sites-available/default
+                  ├── snippets
+                  │   ├── fastcgi-php.conf
+                  │   └── snakeoil.conf
+                  └── win-utf
+          </code></pre>
+              </td>
+            </tr>
+          </table>
+        </section>
+
+        <section>
+          <h4 style="text-transform: none">fastcgi_pass address;</h4>
+          <pre><code data-trim data-noescape  class="language-nginx">
+            location ~ \.php$ {
+              # include /etc/nginx/fastcgi_params;
+              fastcgi_param   QUERY_STRING            $query_string;
+              fastcgi_param   REQUEST_METHOD          $request_method;
+              fastcgi_param   CONTENT_TYPE            $content_type;
+              ... 
+              fastcgi_param   SCRIPT_FILENAME         $document_root$fastcgi_script_name;
+
+              fastcgi_pass 127.0.0.1:9000;
+            }
+          </code></pre>
+        </section>
+
+        <section><h2>php-fpm</h2></section>
+
+        <section>
+          <h4 style="text-transform: none">php-fpm</h4>
+          <pre><code data-trim data-noescape  class="language-ini">
+            [global]
+            error_log = /var/log/php/error.log
+
+            [my_pool_name]
+            user = www-data
+            group = www-data
+
+            listen = [::]:9000
+            ;listen = /run/php/php7.4-fpm.sock
+
+            pm = dynamic
+            ; pm = static|ondemand
+
+            pm.max_children = 5
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Практика</h2>
+          <pre><code data-trim data-noescape class="language-plaintext">
+            ..
+            └── 80
+                ├── funtov.loc (default server)
+                │   ├── index.html
+                │   ├── nginx.html
+                │   ├── Остальные файлы для презентаций
+                │   ├── new-php
+                │   │   └── php-app (любые запросы идут на index.php)
+                │   ├── node
+                │   │   └── node-app (все на ноду)
+                │   └── system
+                │       ├── admin
+                │       │   ├── index.php
+                │       │   ├── logo.jpg
+                │       │   └── order.php
+                │       └── backoffice
+                │           └── index_v2.php
+                └── funtov-proxy.loc
+                    ├── kibana.funtov-proxy.loc
+                    │   └── kibana.x340.org
+                    └── tech-dash.funtov-proxy.loc
+                        └── tech-dashboard.x340.org
+          </code></pre>
+        </section>
+        <section>
+          А нету на серваке файлового менеджера визуального?
+          <pre><code data-trim data-noescape class="language-plaintext">
+            mc
+          </code></pre>
+          А нету на серваке текстового редактора попроще?
+          <pre><code data-trim data-noescape class="language-plaintext">
+            tilde
+          </code></pre>
+          А нельзя менять всё локально и отправлять на сервак?
+          <pre><code data-trim data-noescape class="language-plaintext">
+            rsync -azvr --progress --exclude '.git*' --delete . UserName@10.4.89.666:/home/USERNAME/devops_lessons
+            ssh UserName@10.4.89.666
+            sudo ln -s /home/USERNAME/devops_lessons/some_file /etc/configs/some_file
+          </code></pre>
+        </section>
+      </div>
+    </div>
+
+    <script src="reveal/dist/reveal.js"></script>
+    <script src="reveal/plugin/notes/notes.js"></script>
+    <script src="reveal/plugin/markdown/markdown.js"></script>
+    <script src="reveal/plugin/highlight/highlight.js"></script>
+    <script>
+      // More info about initialization & config:
+      // - https://revealjs.com/initialization/
+      // - https://revealjs.com/config/
+      Reveal.initialize({
+        hash: true,
+        width: 1200,
+
+        // Learn about plugins: https://revealjs.com/plugins/
+        plugins: [RevealMarkdown, RevealHighlight, RevealNotes],
+      });
+    </script>
+  </body>
+</html>
