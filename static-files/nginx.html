@@ -28,7 +28,7 @@
           <h2>Nginx</h2>
         </section>
         <section>
-          <pre><code data-trim data-noescape class="language-nginx">
+          <pre><code data-trim data-noescape class="language-nginx" data-line-numbers="">
             events {}
 
             http {
@@ -39,7 +39,7 @@
           </code></pre>
         </section>
         <section>
-          <pre><code data-trim data-noescape class="language-nginx">
+          <pre><code data-trim data-noescape class="language-nginx" data-line-numbers="5,7-9">
             events {}
 
             http {
@@ -145,7 +145,7 @@
                     <li>“/index.html” - B</li>
                     <li>“/documents/document.html” - C</li>
                     <li>“/images/1.gif” - D</li>
-                    <li>“/documents/1.jpg” - E</li>
+                    <li>“/documents/1.JPG” - E</li>
                   </ul>
                 </div>
               </td>
@@ -157,8 +157,15 @@
           <h4 style="text-transform: none">
             error_page code ... [=[response]] uri;
           </h4>
-          <pre><code style="max-height: 500px;" data-trim data-noescape  class="language-nginx" data-line-numbers="2-8|10-15|17-25">
+          <pre><code style="max-height: 500px;" data-trim data-noescape  class="language-nginx" data-line-numbers="2-7|9-15|17-23">
             root /usr/share/nginx/html_vasya;
+            location / {
+              try_files $uri $uri/index.html =404;
+            }
+
+            error_page 404             /404.html;
+            error_page 500 502 503 504 /50x.html;
+
             location /images/ {
                 try_files $uri /images/default.gif;
             }
@@ -168,19 +175,10 @@
             }
 
             location / {
-              try_files $uri $uri/index.html $uri.html =404;
+              try_files /system/maintenance.html @warp;
             }
 
-            error_page 404             /404.html;
-            error_page 500 502 503 504 /50x.html;
-
-            location / {
-              try_files /system/maintenance.html
-              $uri $uri/index.html $uri.html
-              @warp;
-            }
-
-            location @mongrel {
+            location @warp {
               proxy_pass http://warp-1-2.x340.org:8200;
             }
           </code></pre>
@@ -188,11 +186,16 @@
         <section>
           <h4 style="text-transform: none">proxy_pass URL;</h4>
           <h4 style="text-transform: none">upstream name { ... }</h4>
-          <pre><code style="max-height: 500px;" data-trim data-noescape  class="language-nginx" data-line-numbers="1-7|9-12|14-17|19-23">
+          <pre><code style="max-height: 500px;" data-trim data-noescape  class="language-nginx" data-line-numbers="1-4|6-12|14-17|19-22|24-28">
+            location /vasya/ {
+              proxy_pass http://petya.loc:3000;
+              # vasya.loc/vasya/index.js -> petya.loc:3000/vasya/index.js
+            }
+
             upstream warp {
-                server warp-4-2.x340.org      weight=5;
+                server warp-4-2.x340.org;
                 server 127.0.0.1:8200         max_conns=200;
-                server unix:/tmp/backend3;
+                server unix:/tmp/backend3     weight=5;
 
                 server warp-3-1.x340.org      backup;
             }
@@ -207,10 +210,10 @@
               # vasya.loc/public/index.js -> warp-4-2.x340.org/static/index.js
             }
 
-            location /vasya/ {
-              proxy_set_header X-Subdmn $subdmn;
+            location /vasya2/ {
+              proxy_set_header X-From-Who 'From-Vasya';
               proxy_pass http://petya.loc:3000/;
-              # asd.vasya.loc/vasya/index.js -> petya.loc:3000/index.js (+header)
+              # vasya.loc/vasya2/index.js -> petya.loc:3000/index.js (+header)
             }
           </code></pre>
         </section>
