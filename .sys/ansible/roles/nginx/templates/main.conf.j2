@@ -1,0 +1,37 @@
+upstream node_app {
+    server localhost:{{node_port}};
+}
+
+server {
+    server_name {{main_domain}};
+    listen {{main_port}};
+
+    root {{project_root}};
+
+    location / {
+        root {{project_root}}/static-files;
+        try_files $uri $uri/index.html =404;
+    }
+
+    location /system/ {
+        try_files $uri $uri/index.html =404;
+    }
+
+    location ^~ /new-php/ {
+        include /etc/nginx/fastcgi_params;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME {{project_root}}/php-app/index.php;
+        fastcgi_pass unix:{{php_fpm_socket}};
+    }
+
+    location ~ \.php$ {
+        include /etc/nginx/fastcgi_params;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_pass unix:{{php_fpm_socket}};
+    }
+
+    location /node/ {
+        proxy_pass http://node_app;
+    }
+}

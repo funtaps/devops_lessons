@@ -1,0 +1,20 @@
+- name: Install node
+  apt:
+    name: nodejs
+
+- name: Node app systemd unit
+  template:
+    src: node-app.service.j2
+    dest: /etc/systemd/system/node-app.service
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - "Systemd daemon-reload"
+    - "Systemd restart node-app"
+
+- name: Start node app
+  systemd:
+    name: node-app
+    state: started
+    enabled: yes

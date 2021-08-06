@@ -1,0 +1,4 @@
+- name: Php-fpm reload
+  systemd:
+    name: php7.4-fpm
+    state: reloaded

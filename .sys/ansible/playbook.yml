@@ -1,0 +1,13 @@
+- name: Deploy all for devops lessons
+  hosts: localhost
+  gather_facts: no
+  vars:
+    project_root: /home/kfuntov/devops_lessons
+    main_domain: funtov.loc
+    main_port: 80
+    node_port: 3000
+    php_fpm_socket: /run/php/my-app-php-fpm.sock
+  roles:
+    - nginx
+    - node-app
+    - php-app

@@ -1,0 +1,34 @@
+map $http_host $proxy_upstream {
+    hostnames;
+
+    default kibana;
+    kibana.* kibana;
+    tech-dash.* tech-dash;
+}
+
+upstream kibana {
+    server kibana.x340.org;
+}
+upstream tech-dash {
+    server tech-dash.x340.org;
+}
+
+map $http_host $proxy_host {
+    hostnames;
+
+    default kibana.x340.org;
+    kibana.* kibana.x340.org;
+    tech-dash.* tech-dash.x340.org;
+}
+
+
+server {
+    server_name *.{{main_domain}};
+    listen {{main_port}};
+
+    location / {
+        proxy_set_header Host $proxy_host;
+        proxy_pass http://$proxy_upstream;
+    }
+
+}
