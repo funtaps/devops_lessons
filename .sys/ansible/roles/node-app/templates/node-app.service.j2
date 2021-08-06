@@ -3,7 +3,7 @@ Description=NodeJs app for devops lessons
 
 [Service]
 User=www-data
-WorkingDirectory={{project_root}}/node-app
+WorkingDirectory=/home/kfuntov/devops_lessons/node-app
 Environment=PORT={{node_port}}
 ExecStart=/usr/bin/node index.js
 Restart=always

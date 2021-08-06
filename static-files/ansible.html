@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+
+    <title>Ansible</title>
+
+    <link rel="stylesheet" href="reveal/dist/reset.css" />
+    <link rel="stylesheet" href="reveal/dist/reveal.css" />
+    <link rel="stylesheet" href="reveal/dist/theme/black.css" />
+    <style>
+      .reveal pre code {
+        max-height: 600px;
+      }
+    </style>
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="reveal/plugin/highlight/monokai.css" />
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h2>Ansible</h2>
+          <a
+            href="https://docs.ansible.com/ansible/latest/user_guide/intro_getting_started.html"
+            >Getting started</a
+          >
+        </section>
+        <section>
+          <h4 style="text-transform: none">Inventory</h4>
+          <pre><code data-trim data-noescape class="language-ini" data-line-numbers="">
+            mail.example.com
+
+            [webservers]
+            warp-1-[1-3].x340.org
+
+            [dbservers]
+            stend-db.x340.org
+            stend-db-daily.x340.org
+          </code></pre>
+        </section>
+        <section>
+          <h4 style="text-transform: none">Playbook</h4>
+          <pre><code data-trim data-noescape class="language-yml" data-line-numbers="">
+            - name: My playbook
+              hosts: all
+              tasks:
+                - name: Leaving a mark
+                  command: "touch /tmp/ansible_was_here"
+          </code></pre>
+        </section>
+        <section>
+          <h4 style="text-transform: none">State not commands</h4>
+          <pre><code data-trim data-noescape class="language-yml" data-line-numbers="">
+            - name: My playbook
+              hosts: webservers
+              tasks:
+                - name: Nginx installed
+                  apt:
+                    name: nginx
+                - name: Nginx started
+                  systemd:
+                    name: nginx
+                    state: started
+                - name: Nginx config
+                  template:
+                    src: nginx.conf.j2
+                    dest: /etc/nginx/nginx.conf
+                    owner: root
+                    group: root
+                    mode: 0644
+              vars:
+                domain_name: funtov.loc 
+          </code></pre>
+        </section>
+        <section>
+          <h4 style="text-transform: none">Templates</h4>
+          <pre><code data-trim data-noescape class="language-nginx" data-line-numbers="">
+            events { }
+
+            http {
+                include /etc/nginx/mime.types;
+                server {
+                  server_name {{domain_name}};
+                  listen 80;
+                  root /usr/share/nginx/html;
+                }
+            }
+          </code></pre>
+        </section>
+        <section>
+          <h4 style="text-transform: none">Roles</h4>
+          <pre><code data-trim data-noescape class="language-yml" data-line-numbers="">
+            - name: My playbook
+              hosts: webservers
+              roles:
+                - nginx-role
+              vars:
+                domain_name: funtov.loc 
+          </code></pre>
+        </section>
+        <section>
+          <h4 style="text-transform: none">Directory structure</h4>
+          <pre><code data-trim data-noescape class="language-plaintext">
+                  ansible
+                  ├── playbook1.yml
+                  ├── playbook2.yml
+                  └── roles
+                      ├── my_role_1
+                      │   ├── handlers
+                      │   │   ├── main.yml
+                      │   │   └── others.yml
+                      │   ├── tasks
+                      │   │   ├── main.yml
+                      │   │   └── others.yml
+                      │   └── templates
+                      │       ├── template1.j2
+                      │       └── template2.j2
+                      └── my_role_2
+                          └── tasks
+                              └── main.yml
+          </code></pre>
+        </section>
+        <section>
+          <h4 style="text-transform: none">Handlers</h4>
+          <pre><code data-trim data-noescape class="language-yml" data-line-numbers="11-16">
+            - name: My playbook
+              hosts: webservers
+              tasks:
+                - name: Nginx config
+                  template:
+                    src: nginx.conf.j2
+                    dest: /etc/nginx/nginx.conf
+                    owner: root
+                    group: root
+                    mode: 0644
+                  notify: Nginx reload
+              handlers:
+                - name: Nginx reload
+                  systemd:
+                    name: nginx
+                    state: reloaded
+              vars:
+                domain_name: funtov.loc 
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Практика</h2>
+          <pre><code data-trim data-noescape class="language-plaintext">
+            ..
+            └── 80
+                ├── funtov.loc (default server)
+                │   ├── index.html
+                │   ├── nginx.html
+                │   ├── Остальные файлы для презентаций
+                │   ├── new-php
+                │   │   └── php-app (любые запросы идут на index.php)
+                │   ├── node
+                │   │   └── node-app (все на ноду)
+                │   └── system
+                │       ├── admin
+                │       │   ├── index.php
+                │       │   ├── logo.jpg
+                │       │   └── order.php
+                │       └── backoffice
+                │           └── index_v2.php
+                ├── kibana.funtov-proxy.loc
+                │   └── kibana.x340.org
+                └── tech-dash.funtov-proxy.loc
+                    └── tech-dashboard.x340.org
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Практика</h2>
+          <ul>
+            <li>Запустить</li>
+            <li>Вынеcти директорию, где хранится репозиторий в переменную</li>
+            <li>Сделать свой домен, а не funtov.loc</li>
+            <li>
+              Добавить http://repetitors.info.master.stend.x340.org/ в
+              проксирование
+            </li>
+            <li>Сменить общение между nginx и php-fpm на порт 9234</li>
+            <li>Сделать, чтобы нода была на порту 4000</li>
+            <li>Починить логотип в админке (/system/admin/index.php)</li>
+            <li>Добавить в запрос к ноде хедер From-who: my-app</li>
+            <li>Добавить роль, которая ставит mc и tilde</li>
+          </ul>
+        </section>
+        <section>
+          А нету на серваке файлового менеджера визуального?
+          <pre><code data-trim data-noescape class="language-plaintext">
+            mc
+          </code></pre>
+          А нету на серваке текстового редактора попроще?
+          <pre><code data-trim data-noescape class="language-plaintext">
+            tilde
+          </code></pre>
+          А нельзя менять всё локально и отправлять на сервак?
+          <pre><code data-trim data-noescape class="language-plaintext">
+            rsync -azvr --progress --exclude '.git*' --delete . UserName@10.4.89.666:/home/USERNAME/devops_lessons
+            ssh UserName@10.4.89.666
+            sudo ansible-playbook devops_lessons/.sys/ansible/playbook.yml
+          </code></pre>
+        </section>
+      </div>
+    </div>
+
+    <script src="reveal/dist/reveal.js"></script>
+    <script src="reveal/plugin/notes/notes.js"></script>
+    <script src="reveal/plugin/markdown/markdown.js"></script>
+    <script src="reveal/plugin/highlight/highlight.js"></script>
+    <script>
+      // More info about initialization & config:
+      // - https://revealjs.com/initialization/
+      // - https://revealjs.com/config/
+      Reveal.initialize({
+        hash: true,
+        width: 1200,
+
+        // Learn about plugins: https://revealjs.com/plugins/
+        plugins: [RevealMarkdown, RevealHighlight, RevealNotes],
+      });
+    </script>
+  </body>
+</html>
