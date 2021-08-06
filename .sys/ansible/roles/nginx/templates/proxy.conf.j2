@@ -13,12 +13,17 @@ upstream tech-dash {
     server tech-dash.x340.org;
 }
 
+upstream rep {
+    server repetitors.info.master.stend.x340.org;
+}
+
 map $http_host $proxy_host {
     hostnames;
 
     default kibana.x340.org;
     kibana.* kibana.x340.org;
     tech-dash.* tech-dash.x340.org;
+    rep.* repetitors.info.master.stend.x340.org;
 }
 
 

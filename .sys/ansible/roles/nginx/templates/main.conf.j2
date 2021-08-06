@@ -6,17 +6,22 @@ server {
     server_name {{main_domain}};
     listen {{main_port}};
 
-    root /home/kfuntov/devops_lessons;
+    root {{main_dir}};
 
     location / {
-        root /home/kfuntov/devops_lessons/static-files;
+        root {{main_dir}}/static-files;
         try_files $uri $uri/index.html =404;
+    }
+
+
+    location ~ \.jpg$ {
+       try_files $uri $uri/index.html =404;
     }
 
     location ^~ /new-php/ {
         include /etc/nginx/fastcgi_params;
         fastcgi_index index.php;
-        fastcgi_param SCRIPT_FILENAME /home/kfuntov/devops_lessons/php-app/index.php;
+        fastcgi_param SCRIPT_FILENAME {{main_dir}}/php-app/index.php;
         fastcgi_pass unix:{{php_fpm_socket}};
     }
 
@@ -28,6 +33,8 @@ server {
     }
 
     location /node/ {
+        proxy_set_header From-who 'my-app';
+        proxy_set_header Host            'testx';
         proxy_pass http://node_app;
     }
 }
