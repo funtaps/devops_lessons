@@ -4,6 +4,7 @@ map $http_host $proxy_upstream {
     default kibana;
     kibana.* kibana;
     tech-dash.* tech-dash;
+    rep.* rep;
 }
 
 upstream kibana {
