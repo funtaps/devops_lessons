@@ -22,14 +22,14 @@ server {
         include /etc/nginx/fastcgi_params;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME {{main_dir}}/php-app/index.php;
-        fastcgi_pass unix:{{php_fpm_socket}};
+        fastcgi_pass {{php_fpm_socket}};
     }
 
     location ~ \.php$ {
         include /etc/nginx/fastcgi_params;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-        fastcgi_pass unix:{{php_fpm_socket}};
+        fastcgi_pass {{php_fpm_socket}};
     }
 
     location /node/ {
