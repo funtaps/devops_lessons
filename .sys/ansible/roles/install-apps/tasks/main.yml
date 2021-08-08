@@ -1,0 +1,7 @@
+- name: Install tilde
+  apt:
+    name: tilde
+
+- name: Install mc
+  apt:
+    name: mc

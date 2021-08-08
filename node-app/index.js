@@ -6,7 +6,7 @@ const port = process.env.PORT;
 const server = http.createServer((req, res) => {
   if (req.url === "/node/hello") {
     res.statusCode = 200;
-    res.end('Hello from node.js');
+    res.end('Hello from node.js ' + req.headers['from-who'] + ' ' + req.headers['host']);
     return;
   }
   res.statusCode = 404;

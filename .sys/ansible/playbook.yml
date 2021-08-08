@@ -2,11 +2,13 @@
   hosts: localhost
   gather_facts: no
   vars:
-    main_domain: funtov.loc
+    main_domain: mustafin.local
+    main_dir: /home/MustafinTF/devops_lessons
     main_port: 80
-    node_port: 3000
-    php_fpm_socket: /run/php/my-app-php-fpm.sock
+    node_port: 4000
+    php_fpm_socket: 127.0.0.1:9234
   roles:
     - nginx
     - node-app
     - php-app
+    - install-apps
