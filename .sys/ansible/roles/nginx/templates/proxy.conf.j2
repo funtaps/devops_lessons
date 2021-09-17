@@ -4,6 +4,7 @@ map $http_host $proxy_upstream {
     default kibana;
     kibana.* kibana;
     tech-dash.* tech-dash;
+    stend.* stend;
 }
 
 upstream kibana {
@@ -13,12 +14,17 @@ upstream tech-dash {
     server tech-dash.x340.org;
 }
 
+upstream stend {
+    server repetitors.info.master.stend.x340.org;
+}
+
 map $http_host $proxy_host {
     hostnames;
 
     default kibana.x340.org;
     kibana.* kibana.x340.org;
     tech-dash.* tech-dash.x340.org;
+    stend.* repetitors.info.master.stend.x340.org;
 }
 
 

@@ -1,6 +1,6 @@
 <h1>Админка</h1>
 <hr/>
-<img src="./logo.jpg" />
+<img src="logo.jpg" />
 <hr/>
 <?php
 

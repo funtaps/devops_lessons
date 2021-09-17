@@ -12,10 +12,6 @@ server {
         root {{repo_dir}}/static-files;
         try_files $uri $uri/index.html =404;
     }
-    
-    location ~ \.jpg$ {
-       try_files $uri $uri/index.html =404;
-    }
 
     location ^~ /new-php/ {
         include /etc/nginx/fastcgi_params;
@@ -33,8 +29,8 @@ server {
 
     location /node/ {
         proxy_pass http://node_app;
-        proxy_set_header From-who 'my_app';
-        add_header From-who 'my_app';
     }
 
+    location /system/ {
+    
 }

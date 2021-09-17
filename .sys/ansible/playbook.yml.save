@@ -4,11 +4,10 @@
   vars:
     main_domain: rrr.loc
     main_port: 80
-    node_port: 4000
-    php_fpm_socket: 127.0.0.1:9234
-    repo_dir: /home/BilevaAA/devops_lessons
+    node_port: 3000
+    php_fpm_socket: /run/php/my-app-php-fpm.sock
+    repo_dir: /home/BilevaAA
   roles:
     - nginx
     - node-app
     - php-app
-    - install-mc-tilde
